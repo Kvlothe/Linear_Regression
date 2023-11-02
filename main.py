@@ -94,12 +94,12 @@ outliers_info = pd.DataFrame(outliers_info_list)
 
 print(outliers_info)
 # Call the function
-plot_outliers(df, threshold=0.04)
+plot_outliers(df, threshold=0.045)
 
 
 ##########################################
 # Create a group for columns that I want to keep around but do not want to use for analysis, then create
-columns_to_keep = ['CaseOrder', 'Customer_id', 'Interaction', 'UID', 'Zip', 'Job']
+columns_to_keep = ['CaseOrder', 'Customer_id', 'Interaction', 'UID', 'Zip', 'Job', 'Population']
 X_reference = X[columns_to_keep]
 X_analysis = X.drop(columns=columns_to_keep)
 
@@ -121,14 +121,14 @@ X_analysis = pd.get_dummies(X_analysis, columns=one_hot_columns, drop_first=True
 
 ########################################
 # Create training and testing set, create and train the model. Print out MSE
-# X_train, X_test, y_train, y_test = train_test_split(X_analysis, y, test_size=0.2, random_state=42)
-#
-# model = LinearRegression()
-# model.fit(X_train, y_train)
-#
-# y_pred = model.predict(X_test)
-# mse = mean_squared_error(y_test, y_pred)
-# print(f"Mean Squared Error: {mse}")
+X_train, X_test, y_train, y_test = train_test_split(X_analysis, y, test_size=0.2, random_state=42)
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+mse = mean_squared_error(y_test, y_pred)
+print(f"Mean Squared Error: {mse}")
 
 # result_df = pd.concat([X_reference, X_analysis], axis=1)
 # result_df = pd.concat([X_reference, predictions], axis=1)
