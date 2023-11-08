@@ -4,7 +4,9 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 
 
 def plot_outliers(df, threshold=0.05):
@@ -33,9 +35,11 @@ def plot_outliers(df, threshold=0.05):
             # Plot boxplot
             plt.figure(figsize=(10, 6))
             sns.boxplot(x=data)
-            plt.title(f"Boxplot of {col} (Z-Score Outliers: {percent_outliers_z_score:.2%}, IQR Outliers: {percent_outliers_iqr:.2%})")
+            plt.title(f"Boxplot of {col} (Z-Score Outliers: {percent_outliers_z_score:.2%}, "
+                      f"IQR Outliers: {percent_outliers_iqr:.2%})")
             plt.xlabel(col)
             plt.show()
+
 
 # Read in the Data set and create a data frame - df
 df = pd.read_csv('churn_clean.csv')
@@ -99,7 +103,8 @@ plot_outliers(df, threshold=0.045)
 
 ##########################################
 # Create a group for columns that I want to keep around but do not want to use for analysis, then create
-columns_to_keep = ['CaseOrder', 'Customer_id', 'Interaction', 'UID', 'Zip', 'Job', 'Population']
+columns_to_keep = ['CaseOrder', 'Customer_id', 'Interaction', 'UID', 'Zip', 'Job', 'Population', 'Lat', 'Lng', 'City',
+                   'State', 'County', 'Area', 'PaymentMethod']
 X_reference = X[columns_to_keep]
 X_analysis = X.drop(columns=columns_to_keep)
 
@@ -113,23 +118,50 @@ for col in binary_columns:
 
 y = y.map(binary_mapping)
 
-one_hot_columns = ['City', 'State', 'County', 'Area', 'TimeZone', 'Marital', 'Gender', 'Contract',
-                   'InternetService', 'PaymentMethod']
+one_hot_columns = ['InternetService', 'TimeZone', 'Marital', 'Gender', 'Contract']
 
 
 X_analysis = pd.get_dummies(X_analysis, columns=one_hot_columns, drop_first=True)
 
 ########################################
 # Create training and testing set, create and train the model. Print out MSE
-X_train, X_test, y_train, y_test = train_test_split(X_analysis, y, test_size=0.2, random_state=42)
+# Splitting the data
+X_train, X_test, y_train, y_test = train_test_split(X_analysis, y, test_size=0.2, random_state=0)
+linreg = LinearRegression().fit(X_train, y_train)
+y_pred = linreg.predict(X_test)
 
-model = LinearRegression()
-model.fit(X_train, y_train)
-
-y_pred = model.predict(X_test)
+# Calculate metrics
 mse = mean_squared_error(y_test, y_pred)
-print(f"Mean Squared Error: {mse}")
+rmse = np.sqrt(mse)
+mae = mean_absolute_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+# Print Metrics
+print("Mean Squared Error:", mse)
+print("Root Mean Squared Error:", rmse)
+print("Mean Absolute Error:", mae)
+print("R-squared:", r2)
 
-# result_df = pd.concat([X_reference, X_analysis], axis=1)
-# result_df = pd.concat([X_reference, predictions], axis=1)
+residuals = y_test - y_pred
+plt.scatter(y_pred, residuals)
+plt.xlabel('Predicted Values')
+plt.ylabel('Residuals')
+plt.axhline(y=0, color='r', linestyle='--')
+plt.title('Residual Plot')
+plt.show()
 
+# Fitting a logistic regression model
+logreg = LogisticRegression(max_iter=10000)
+logreg.fit(X_train, y_train)
+
+# Making predictions
+y_pred = logreg.predict(X_test)
+
+# Evaluating the model
+print("Confusion Matrix:")
+print(confusion_matrix(y_test, y_pred))
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+print("Accuracy Score:", accuracy_score(y_test, y_pred))
+
+result_df = pd.concat([X_reference, X_analysis], axis=1)
+df.to_csv('churn_prepared.csv')
