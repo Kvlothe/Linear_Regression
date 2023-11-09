@@ -4,6 +4,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from data_cleaning import clean_data
 from plot_outlier import plot_outliers
+from summary_stats import summary_statistics
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import LogisticRegression
@@ -14,8 +15,9 @@ from sklearn.metrics import classification_report, confusion_matrix, accuracy_sc
 # Read in the Data set and create a data frame - df
 df = pd.read_csv('churn_clean.csv')
 
-x_reference, x_analysis, y = clean_data(df)
+x_reference, x_analysis, y, one_hot_columns, binary_columns = clean_data(df)
 
+summary_statistics(df, one_hot_columns, binary_columns, x_analysis)
 
 # Create training and testing set, create and train the model. Print out MSE
 # Splitting the data

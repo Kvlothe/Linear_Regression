@@ -101,4 +101,4 @@ def clean_data(df):
 
     x_analysis = pd.get_dummies(x_analysis, columns=one_hot_columns, drop_first=True)
 
-    return x_reference, x_analysis, y
+    return x_reference, x_analysis, y, one_hot_columns, binary_columns
