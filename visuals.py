@@ -64,7 +64,7 @@ def plot_outliers(df, threshold=0.04, plots_per_page=6):
 
         plt.tight_layout()
         plt.savefig(f'Box_Plots/Boxplot_Page_{fig_num + 1}.png')
-        plt.show()
+        plt.close()
 
 
 def heat_map(df, categorical_columns, churn_col, plots_per_page=6):
@@ -89,7 +89,7 @@ def heat_map(df, categorical_columns, churn_col, plots_per_page=6):
 
         plt.tight_layout()
         plt.savefig(f'Heat_Map/Heat_map{col}_vs_{churn_col}.png')
-        plt.show()
+        plt.close()
 
 
 def violin_plot(df, continuous_columns, churn_col, plots_per_page=6):
@@ -113,7 +113,7 @@ def violin_plot(df, continuous_columns, churn_col, plots_per_page=6):
 
         plt.tight_layout()
         plt.savefig(f'Violin_plots/Violin_Plot_{col}_vs_{churn_col}_{page + 1}.png')
-        plt.show()
+        plt.close()
 
 
 def count_plot(df, categorical_columns, plots_per_page=6):
@@ -143,5 +143,56 @@ def count_plot(df, categorical_columns, plots_per_page=6):
 
         plt.tight_layout()  # Adjust subplots to fit in the figure area
         plt.savefig(f'Count_Plots/categorical_countplots_page_{page + 1}.png')
-        plt.show()  # Show the current page of plots
+        plt.close()
 
+
+def density_plot(df, continuous_columns, plots_per_page=6, folder_path='Density_Plots'):
+    # Ensure the directory exists
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+
+    # Calculate the number of pages needed
+    num_plots = len(continuous_columns)
+    num_pages = math.ceil(num_plots / plots_per_page)
+
+    # Plotting
+    for page in range(num_pages):
+        plt.figure(figsize=(15, 12))  # Adjust the size as needed
+        for i in range(plots_per_page):
+            plot_index = page * plots_per_page + i
+            if plot_index < num_plots:
+                plt.subplot(math.ceil(plots_per_page / 2), 2, i + 1)
+                col = continuous_columns[plot_index]
+                sns.kdeplot(data=df, x=col)
+                plt.title(f'Density Plot of {col}')
+                plt.xlabel(col)
+                plt.ylabel('Density')
+            else:  # Turn off any unused subplots
+                plt.axis('off')
+
+        # Adjust layout, save and show the figure
+        plt.tight_layout()
+        plt.savefig(f'{folder_path}/Density_Plot_Page_{page + 1}.png')
+        plt.close()
+
+
+def plot_residuals_and_calculate_rse(y_true, y_pred):
+    # Calculate residuals
+    residuals = y_true - y_pred
+
+    # Plotting the residual plot
+    plt.figure(figsize=(10, 6))
+    sns.residplot(x=y_pred, y=residuals, lowess=True, line_kws={'color': 'red', 'lw': 2})
+    plt.title('Residual Plot')
+    plt.xlabel('Predicted Values')
+    plt.ylabel('Residuals')
+    plt.axhline(y=0, color='grey', linestyle='--')
+    plt.savefig(f'Residual plot.png')
+    plt.show()
+
+    # Calculate the Residual Standard Error (RSE)
+    rse = np.sqrt(np.sum(residuals ** 2) / (len(residuals) - 2))
+    print(f'Residual Standard Error (RSE): {rse:.2f}')\
+
+
+    return rse
