@@ -1,17 +1,12 @@
 import pandas as pd
 import numpy as np
-from plot_outlier import plot_outliers
+from visuals import plot_outliers
 
 
 def clean_data(df):
-    # Create two separate data frames, one with the dependant variable > y  and
-    # one with all the independent variables > x - one that I will manipulate for analysis
-    x = df.drop('Churn', axis=1)
-    y = df['Churn']
 
     # Get a list of all the columns sorted by data type, for cleaning and analysis - Easier to look at the data this way
-    # rather than in an .xlsx file
-    # Group columns by their dtype
+    # rather than in an .xlsx file and group columns by their data type
     dtype_groups = df.columns.groupby(df.dtypes)
     # Print out each data type and its columns of each data type
     for dtype, columns in dtype_groups.items():
@@ -58,10 +53,10 @@ def clean_data(df):
         outliers_z_score = np.sum(z_score > 3)  # Typically, a Z-Score above 3 is considered as an outlier
 
         # IQR Method
-        Q1 = data.quantile(0.25)
-        Q3 = data.quantile(0.75)
-        IQR = Q3 - Q1
-        outliers_iqr = np.sum((data < (Q1 - 1.5 * IQR)) | (data > (Q3 + 1.5 * IQR)))  # IQR Rule for Outliers
+        q1 = data.quantile(0.25)
+        q3 = data.quantile(0.75)
+        iqr = q3 - q1
+        outliers_iqr = np.sum((data < (q1 - 1.5 * iqr)) | (data > (q3 + 1.5 * iqr)))  # IQR Rule for Outliers
 
         # Storing info
         outliers_info_list.append({'Column': col,
@@ -71,9 +66,9 @@ def clean_data(df):
     # Creating DataFrame
     outliers_info = pd.DataFrame(outliers_info_list)
 
-    print(outliers_info)
+    # print(outliers_info)
     # Call the function
-    plot_outliers(df, threshold=0.045)
+    plot_outliers(df)
 
     # Create two separate data frames, one with the dependant variable > y  and
     # one with all the independent variables > x - one that I will manipulate for analysis
@@ -82,23 +77,25 @@ def clean_data(df):
 
     # Encoding
     # Create a group for columns that I want to keep around but do not want to use for analysis, then create
-    columns_to_keep = ['CaseOrder', 'Customer_id', 'Interaction', 'UID', 'Zip', 'Job', 'Population', 'Lat', 'Lng', 'City',
-                       'State', 'County', 'Area', 'PaymentMethod']
+    columns_to_keep = ['CaseOrder', 'Customer_id', 'Interaction', 'UID', 'Zip', 'Job', 'Population', 'Lat', 'Lng',
+                       'City', 'State', 'County', 'Area', 'PaymentMethod', 'TimeZone']
     x_reference = x[columns_to_keep]
     x_analysis = x.drop(columns=columns_to_keep)
 
     binary_mapping = {'Yes': 1, 'No': 0}
 
     binary_columns = ['Techie', 'Tablet', 'Multiple', 'OnlineSecurity', 'OnlineBackup', 'Phone',
-                      'DeviceProtection', 'TechSupport', 'StreamingTV', 'StreamingMovies', 'PaperlessBilling', 'Port_modem']
+                      'DeviceProtection', 'TechSupport', 'StreamingTV', 'StreamingMovies', 'PaperlessBilling',
+                      'Port_modem']
 
     for col in binary_columns:
         x_analysis[col] = x_analysis[col].map(binary_mapping)
 
     y = y.map(binary_mapping)
 
-    one_hot_columns = ['InternetService', 'TimeZone', 'Marital', 'Gender', 'Contract']
-
+    one_hot_columns = ['InternetService', 'Marital', 'Gender', 'Contract']
+    categorical_columns = one_hot_columns + binary_columns
+    continuous_columns = x_analysis.drop(columns=categorical_columns).columns.tolist()
     x_analysis = pd.get_dummies(x_analysis, columns=one_hot_columns, drop_first=True)
 
-    return x_reference, x_analysis, y, one_hot_columns, binary_columns
+    return x_reference, x_analysis, y, one_hot_columns, binary_columns, categorical_columns, continuous_columns

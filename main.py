@@ -3,8 +3,12 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 from data_cleaning import clean_data
-from plot_outlier import plot_outliers
+from visuals import plot_outliers
+from visuals import heat_map
+from visuals import violin_plot
+from visuals import count_plot
 from summary_stats import summary_statistics
+from summary_stats import churn_stats
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import LogisticRegression
@@ -15,11 +19,16 @@ from sklearn.metrics import classification_report, confusion_matrix, accuracy_sc
 # Read in the Data set and create a data frame - df
 df = pd.read_csv('churn_clean.csv')
 
-x_reference, x_analysis, y, one_hot_columns, binary_columns = clean_data(df)
+x_reference, x_analysis, y, one_hot_columns, binary_columns, categorical_columns, continuous_columns = clean_data(df)
 
+count_plot(df, categorical_columns)
+heat_map(df, categorical_columns, 'Churn')
+violin_plot(df, continuous_columns, 'Churn')
 summary_statistics(df, one_hot_columns, binary_columns, x_analysis)
 
-# Create training and testing set, create and train the model. Print out MSE
+churn_stats(df, 'Churn')
+
+# Create training and testing set, create and train the model.
 # Splitting the data
 X_train, X_test, y_train, y_test = train_test_split(x_analysis, y, test_size=0.2, random_state=0)
 linreg = LinearRegression().fit(X_train, y_train)
@@ -35,6 +44,8 @@ print("Mean Squared Error:", mse)
 print("Root Mean Squared Error:", rmse)
 print("Mean Absolute Error:", mae)
 print("R-squared:", r2)
+print()
+print()
 
 # Plot residuals and predicted values
 residuals = y_test - y_pred

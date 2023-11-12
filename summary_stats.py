@@ -34,7 +34,19 @@ def summary_statistics(df, one_hot_columns, binary_columns, x_analysis):
     column_chunks = np.array_split(numeric_data.columns, 10)
     for columns in column_chunks:
         print(numeric_data[columns].describe())
+        print()  # Just for an extra blank line for readability
 
     # create a new CSV file for easier viewing
     numeric_summary_statistics.to_csv('summary_statistics.csv')
+    print()  # Just for an extra blank line for readability
 
+
+def churn_stats(df, churn_col_name):
+    # Mode
+    print(f"Mode of '{churn_col_name}':")
+    print(df[churn_col_name].mode()[0])
+    print()  # Just for an extra blank line for readability
+    # Value counts
+    print(f"Value counts for '{churn_col_name}':")
+    print(df[churn_col_name].value_counts())
+    print()  # Just for an extra blank line for readability
