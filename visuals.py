@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 
 # Function for plotting all outliers for all integer and float variables
-def plot_outliers(df, threshold=0.04, plots_per_page=6):
+def plot_outliers(df, threshold=0.04, plots_per_page=6, folder_path='Box_Plots'):
     # Selecting numeric columns
     numeric_cols = df.select_dtypes(include=['int64', 'float64'])
 
@@ -63,11 +63,11 @@ def plot_outliers(df, threshold=0.04, plots_per_page=6):
                 axs[i].axis('off')
 
         plt.tight_layout()
-        plt.savefig(f'Box_Plots/Boxplot_Page_{fig_num + 1}.png')
+        plt.savefig(f'{folder_path}/Boxplot_Page_{fig_num + 1}.png')
         plt.close()
 
 
-def heat_map(df, categorical_columns, churn_col, plots_per_page=6):
+def heat_map(df, categorical_columns, churn_col, plots_per_page=6, folder_path='Heat_map'):
     num_plots = len(categorical_columns)
     num_pages = math.ceil(num_plots / plots_per_page)
 
@@ -88,11 +88,11 @@ def heat_map(df, categorical_columns, churn_col, plots_per_page=6):
                 plt.xlabel(churn_col)
 
         plt.tight_layout()
-        plt.savefig(f'Heat_Map/Heat_map{col}_vs_{churn_col}.png')
+        plt.savefig(f'{folder_path}/Heat_map{col}_vs_{churn_col}.png')
         plt.close()
 
 
-def violin_plot(df, continuous_columns, churn_col, plots_per_page=6):
+def violin_plot(df, continuous_columns, churn_col, plots_per_page=6, folder_path='Violin_plots'):
     num_plots = len(continuous_columns)
     num_pages = math.ceil(num_plots / plots_per_page)
 
@@ -112,11 +112,11 @@ def violin_plot(df, continuous_columns, churn_col, plots_per_page=6):
                 plt.ylabel(col)
 
         plt.tight_layout()
-        plt.savefig(f'Violin_plots/Violin_Plot_{col}_vs_{churn_col}_{page + 1}.png')
+        plt.savefig(f'{folder_path}/Violin_Plot_{col}_vs_{churn_col}_{page + 1}.png')
         plt.close()
 
 
-def count_plot(df, categorical_columns, plots_per_page=6):
+def count_plot(df, categorical_columns, plots_per_page=6, folder_path='Count_Plots'):
     # Calculate the number of pages needed to plot all columns
     num_plots = len(categorical_columns)
     num_pages = math.ceil(num_plots / plots_per_page)
@@ -142,7 +142,7 @@ def count_plot(df, categorical_columns, plots_per_page=6):
                 plt.xticks(rotation=90)  # Rotate x labels for better readability
 
         plt.tight_layout()  # Adjust subplots to fit in the figure area
-        plt.savefig(f'Count_Plots/categorical_countplots_page_{page + 1}.png')
+        plt.savefig(f'{folder_path}/categorical_countplots_page_{page + 1}.png')
         plt.close()
 
 

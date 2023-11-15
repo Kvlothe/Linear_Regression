@@ -72,8 +72,8 @@ def clean_data(df):
 
     # Create two separate data frames, one with the dependant variable > y  and
     # one with all the independent variables > x - one that I will manipulate for analysis
-    x = df.drop('Churn', axis=1)
-    y = df['Churn']
+    x = df.drop('Bandwidth_GB_Year', axis=1)
+    y = df['Bandwidth_GB_Year']
 
     # Encoding
     # Create a group for columns that I want to keep around but do not want to use for analysis, then create
@@ -86,12 +86,10 @@ def clean_data(df):
 
     binary_columns = ['Techie', 'Tablet', 'Multiple', 'OnlineSecurity', 'OnlineBackup', 'Phone',
                       'DeviceProtection', 'TechSupport', 'StreamingTV', 'StreamingMovies', 'PaperlessBilling',
-                      'Port_modem']
+                      'Port_modem', 'Churn']
 
     for col in binary_columns:
         x_analysis[col] = x_analysis[col].map(binary_mapping)
-
-    y = y.map(binary_mapping)
 
     one_hot_columns = ['InternetService', 'Marital', 'Gender', 'Contract']
     categorical_columns = one_hot_columns + binary_columns

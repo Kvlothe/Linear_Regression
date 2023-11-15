@@ -3,6 +3,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.tree import DecisionTreeRegressor
+from sklearn.model_selection import cross_val_score
+from sklearn.linear_model import Ridge
 
 
 def regression(x, y):
@@ -72,3 +74,83 @@ def feature_selection(x, y):
     x_selected = x[selected_features]
 
     return x[selected_features], selected_features, dt
+
+
+def feature_selection(x, y):
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=0)
+    # Initialize the DecisionTreeClassifier
+    dt = DecisionTreeRegressor(random_state=42)
+
+    # Fit the model
+    dt.fit(x_train, y_train)
+
+    # Get feature importances
+    importances = dt.feature_importances_
+
+    # Transform the importances into a readable format
+    feature_importance = zip(x.columns, importances)
+    feature_importance = sorted(feature_importance, key=lambda x: x[1], reverse=True)
+
+    # Print the feature importance
+    for feature, importance in feature_importance:
+        print(f"Feature: {feature}, Importance: {importance}")
+
+    # Calculate the average feature importance
+    average_importance = np.mean(importances)
+
+    # Select features that have importance greater than the average
+    selected_features = [feature for feature, importance in feature_importance if importance > average_importance]
+
+    print("Selected features based on importance threshold:")
+    print(selected_features)
+    print()
+    # Create the design matrix X and target vector y using only selected features
+    x_selected = x[selected_features]
+
+    return x[selected_features], selected_features, dt
+
+
+# Feature selection with cross-validation
+def feature_selection_with_cv(x, y, estimator, cv=5):
+    # Fit the model
+    estimator.fit(x, y)
+
+    # Get feature importances
+    importances = estimator.feature_importances_
+
+    # Transform the importances into a readable format
+    feature_importance = zip(x.columns, importances)
+    feature_importance = sorted(feature_importance, key=lambda x: x[1], reverse=True)
+
+    # Select features based on a more discriminating threshold, like the 75th percentile
+    threshold = np.percentile(importances, 75)
+    selected_features = [feature for feature, importance in feature_importance if importance > threshold]
+
+    # Perform cross-validation
+    scores = cross_val_score(estimator, x[selected_features], y, cv=cv, scoring='r2')
+
+    # Print the feature importance and cross-validation scores
+    print("Selected features based on importance threshold:")
+    for feature in selected_features:
+        print(feature)
+    print(f"Cross-validation R^2 scores: {scores}")
+    print(f"Average R^2 score: {np.mean(scores)}")
+
+    return x[selected_features], selected_features, estimator
+
+
+def train_with_regularization(x, y, alpha=1.0):
+    # Initialize Ridge regression with an alpha value for regularization strength
+    ridge = Ridge(alpha=alpha)
+
+    # Fit the model to the training data
+    ridge.fit(x, y)
+
+    # Use cross-validation to evaluate the model
+    cv_scores = cross_val_score(ridge, x, y, cv=5)
+
+    # Print the cross-validation scores
+    print(f"Cross-validation scores: {cv_scores}")
+    print(f"Mean CV Score: {np.mean(cv_scores)}")
+
+    return ridge
