@@ -95,5 +95,6 @@ def clean_data(df):
     categorical_columns = one_hot_columns + binary_columns
     continuous_columns = x_analysis.drop(columns=categorical_columns).columns.tolist()
     x_analysis = pd.get_dummies(x_analysis, columns=one_hot_columns, drop_first=True)
+    print()
 
     return x_reference, x_analysis, y, one_hot_columns, binary_columns, categorical_columns, continuous_columns

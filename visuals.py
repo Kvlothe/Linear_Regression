@@ -11,8 +11,8 @@ def plot_outliers(df, threshold=0.04, plots_per_page=6, folder_path='Box_Plots')
     # Selecting numeric columns
     numeric_cols = df.select_dtypes(include=['int64', 'float64'])
 
-    # Prepare the directory for saving boxplots
-    save_dir = 'Box Plots'
+    # Prepare the directory for saving box plots
+    save_dir = 'Box_Plots'
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
@@ -71,6 +71,11 @@ def heat_map(df, categorical_columns, churn_col, plots_per_page=6, folder_path='
     num_plots = len(categorical_columns)
     num_pages = math.ceil(num_plots / plots_per_page)
 
+    # Prepare the directory for saving heat maps
+    save_dir = 'Heat_map'
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
     for page in range(num_pages):
         plt.figure(figsize=(15, 18))  # Adjust the size as needed
 
@@ -92,9 +97,14 @@ def heat_map(df, categorical_columns, churn_col, plots_per_page=6, folder_path='
         plt.close()
 
 
-def violin_plot(df, continuous_columns, churn_col, plots_per_page=6, folder_path='Violin_plots'):
-    num_plots = len(continuous_columns)
+def violin_plot(df, categorical_columns, dependent_variable, plots_per_page=6, folder_path='Violin_Plots'):
+    num_plots = len(categorical_columns)
     num_pages = math.ceil(num_plots / plots_per_page)
+
+    # Prepare the directory for saving violin plots
+    save_dir = 'Violin_Plots'
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
 
     for page in range(num_pages):
         plt.figure(figsize=(15, 18))  # Adjust the size as needed
@@ -103,16 +113,16 @@ def violin_plot(df, continuous_columns, churn_col, plots_per_page=6, folder_path
             plot_number = page * plots_per_page + i
 
             if plot_number < num_plots:
-                col = continuous_columns[plot_number]
+                col = categorical_columns[plot_number]
 
                 plt.subplot(math.ceil(plots_per_page / 2), 2, i + 1)
-                sns.violinplot(x=df[churn_col], y=df[col])
-                plt.title(f'Violin Plot of {col} vs {churn_col}')
-                plt.xlabel(churn_col)
+                sns.violinplot(x=df[dependent_variable], y=df[col])
+                plt.title(f'Violin Plot of {col} vs {dependent_variable}')
+                plt.xlabel(dependent_variable)
                 plt.ylabel(col)
 
         plt.tight_layout()
-        plt.savefig(f'{folder_path}/Violin_Plot_{col}_vs_{churn_col}_{page + 1}.png')
+        plt.savefig(f'{folder_path}/Violin_Plot_{col}_vs_{dependent_variable}_{page + 1}.png')
         plt.close()
 
 
@@ -120,6 +130,11 @@ def count_plot(df, categorical_columns, plots_per_page=6, folder_path='Count_Plo
     # Calculate the number of pages needed to plot all columns
     num_plots = len(categorical_columns)
     num_pages = math.ceil(num_plots / plots_per_page)
+
+    # Prepare the directory for saving count plots
+    save_dir = 'Count_Plots'
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
 
     # Loop through pages
     for page in range(num_pages):
@@ -147,7 +162,9 @@ def count_plot(df, categorical_columns, plots_per_page=6, folder_path='Count_Plo
 
 
 def density_plot(df, continuous_columns, plots_per_page=6, folder_path='Density_Plots'):
-    # Ensure the directory exists
+
+    # Prepare the directory for saving density plots
+    save_dir = 'Density_Plots'
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
 
@@ -173,6 +190,31 @@ def density_plot(df, continuous_columns, plots_per_page=6, folder_path='Density_
         # Adjust layout, save and show the figure
         plt.tight_layout()
         plt.savefig(f'{folder_path}/Density_Plot_Page_{page + 1}.png')
+        plt.close()
+
+
+def scatter_plot(df, dependent_var, continuous_columns, folder_path='Scatter_Plots', plots_per_page=6):
+    # Ensure the directory exists
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+
+    # Number of pages
+    num_plots = len(continuous_columns)
+    num_pages = math.ceil(num_plots / plots_per_page)
+
+    # Create plots
+    for page in range(num_pages):
+        plt.figure(figsize=(18, 12))  # Adjust the size as needed
+        for i in range(min(plots_per_page, num_plots - page * plots_per_page)):  # This ensures we don't go over the number of plots
+            ax = plt.subplot(math.ceil(plots_per_page / 2), 2, i + 1)
+            col = continuous_columns[page * plots_per_page + i]
+            sns.scatterplot(x=col, y=dependent_var, data=df, ax=ax)
+            ax.set_title(f'Scatter Plot of {col} vs {dependent_var}')
+            ax.set_xlabel(col)
+            ax.set_ylabel(dependent_var)
+
+        plt.tight_layout()
+        plt.savefig(f'{folder_path}/ScatterPlot_Page_{page + 1}.png')
         plt.close()
 
 

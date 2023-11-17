@@ -29,6 +29,8 @@ def summary_statistics(df, one_hot_columns, binary_columns, x_analysis):
     # get numeric data for summary statistics
     numeric_data = x_analysis.select_dtypes(include=[np.number])
     numeric_summary_statistics = numeric_data.describe()
+    print(df['Bandwidth_GB_Year'].describe())
+    print()
 
     # Split columns into chunks and print them separately
     column_chunks = np.array_split(numeric_data.columns, 10)
