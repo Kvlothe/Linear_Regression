@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def summary_statistics(df, one_hot_columns, binary_columns, x_analysis):
+def summary_statistics(df, one_hot_columns, binary_columns, df_analysis):
     # print out the mode for all the columns separated into one hot columns
     for col in one_hot_columns:
         print(f"Mode of '{col}':")
@@ -27,13 +27,13 @@ def summary_statistics(df, one_hot_columns, binary_columns, x_analysis):
         print()  # Just for an extra blank line for readability
 
     # get numeric data for summary statistics
-    numeric_data = x_analysis.select_dtypes(include=[np.number])
+    numeric_data = df_analysis.select_dtypes(include=[np.number])
     numeric_summary_statistics = numeric_data.describe()
     print(df['Bandwidth_GB_Year'].describe())
     print()
 
     # Split columns into chunks and print them separately
-    column_chunks = np.array_split(numeric_data.columns, 10)
+    column_chunks = np.array_split(numeric_data.columns, 5)
     for columns in column_chunks:
         print(numeric_data[columns].describe())
         print()  # Just for an extra blank line for readability

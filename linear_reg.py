@@ -6,6 +6,14 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.model_selection import cross_val_score
 from sklearn.linear_model import Ridge
 from sklearn.base import clone
+from scipy.stats import f
+from scipy import stats
+import statsmodels.api as sm
+
+# Ignore FutureWarnings - very annoying when trying to view printouts. Had to adjust code here so those warning go away
+# One suggestion was update Seaborn, Already using most current version.**
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
 def regression(x, y):
@@ -30,10 +38,14 @@ def regression(x, y):
     print('y = {:.4f}'.format(linreg.intercept_), end='')
     for i, coef in enumerate(linreg.coef_):
         print(' + {:.4f}*{}'.format(coef, x.columns[i]), end='')
+    print()
+
+    # Calculate the F-statistic
+    f_stat, p_val = calculate_f_statistic(x, y, linreg)
+    print()
+    print(f"F-statistic: {f_stat}, p-value: {p_val}")
 
     # Print Metrics
-    print()
-    print()
     print(f'Mean Absolute Error (MAE): {mae}')
     print(f'Mean Squared Error (MSE): {mse}')
     print(f'Root Mean Squared Error (RMSE): {rmse}')
@@ -41,6 +53,49 @@ def regression(x, y):
     print()
 
     return y_test, y_pred, linreg
+
+
+def regression_statsmodels(x, y):
+    # Convert boolean columns to integers
+    x = x.apply(lambda col: col.astype(int) if col.dtype == bool else col)
+
+    # Splitting the data
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=0)
+
+    # Adding a constant to the model (for the intercept)
+    x_train_const = sm.add_constant(x_train)
+
+    # Initialize and fit the OLS model
+    model = sm.OLS(y_train, x_train_const).fit()
+
+    # Predict on the testing set
+    x_test_const = sm.add_constant(x_test)
+    y_pred = model.predict(x_test_const)
+
+    # Calculate metrics for Linear regression
+    mae = mean_absolute_error(y_test, y_pred)
+    mse = mean_squared_error(y_test, y_pred)
+    rmse = np.sqrt(mse)
+    r2 = r2_score(y_test, y_pred)
+
+    # Print the model summary
+    print(model.summary())
+
+    # Construct and print the regression equation
+    equation = "y = {:.4f}".format(model.params[0])  # Intercept
+    for i, col_name in enumerate(x_train_const.columns[1:]):
+        equation += " + {:.4f}*{}".format(model.params[i + 1], col_name)
+    print("\nRegression Equation:")
+    print(equation)
+
+    # Print additional metrics
+    print(f'\nAdditional Metrics:')
+    print(f'Mean Absolute Error (MAE): {mae}')
+    print(f'Mean Squared Error (MSE): {mse}')
+    print(f'Root Mean Squared Error (RMSE): {rmse}')
+    print(f'R-squared: {r2}')
+
+    return y_test, y_pred, model
 
 
 def feature_selection(x, y):
@@ -130,3 +185,25 @@ def train_with_regularization(x, y, alpha=1.0):
     print(f"Mean CV Score: {np.mean(cv_scores)}")
 
     return ridge
+
+
+def calculate_f_statistic(x, y, model):
+    # Degrees of freedom
+    df_model = x.shape[1]  # Number of features
+    df_total = x.shape[0] - 1  # Total observations minus 1
+    df_resid = df_total - df_model  # Residual degrees of freedom
+
+    # Sum of squares
+    ss_total = np.sum((y - np.mean(y)) ** 2)
+    ss_resid = np.sum((y - model.predict(x)) ** 2)
+    ss_explained = ss_total - ss_resid  # Explained sum of squares
+
+    # Mean sum of squares
+    ms_model = ss_explained / df_model
+    ms_resid = ss_resid / df_resid
+
+    # F-statistic
+    f_statistic = ms_model / ms_resid
+    p_value = f.sf(f_statistic, df_model, df_resid)  # Survival function (1 - CDF) to get p-value
+
+    return f_statistic, p_value

@@ -82,19 +82,21 @@ def clean_data(df):
     x_reference = x[columns_to_keep]
     x_analysis = x.drop(columns=columns_to_keep)
 
-    binary_mapping = {'Yes': 1, 'No': 0}
+    binary_mapping = {'Yes': 1, 'No': 0, 'DSL': 1, 'Fiber Optic': 0, 'True': 1, 'False': 0}
 
     binary_columns = ['Techie', 'Tablet', 'Multiple', 'OnlineSecurity', 'OnlineBackup', 'Phone',
                       'DeviceProtection', 'TechSupport', 'StreamingTV', 'StreamingMovies', 'PaperlessBilling',
-                      'Port_modem', 'Churn']
+                      'Port_modem', 'Churn', 'InternetService']
+    one_hot_columns = ['Marital', 'Gender', 'Contract']
 
     for col in binary_columns:
         x_analysis[col] = x_analysis[col].map(binary_mapping)
 
-    one_hot_columns = ['InternetService', 'Marital', 'Gender', 'Contract']
     categorical_columns = one_hot_columns + binary_columns
-    continuous_columns = x_analysis.drop(columns=categorical_columns).columns.tolist()
+    continuous_columns_list = x_analysis.drop(columns=categorical_columns).columns.tolist()
     x_analysis = pd.get_dummies(x_analysis, columns=one_hot_columns, drop_first=True)
+    df_analysis = df.drop(columns=columns_to_keep)
     print()
 
-    return x_reference, x_analysis, y, one_hot_columns, binary_columns, categorical_columns, continuous_columns
+    return x_reference, x_analysis, y, one_hot_columns, binary_columns, categorical_columns, continuous_columns_list, \
+        df_analysis

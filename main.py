@@ -13,31 +13,38 @@ from linear_reg import feature_selection_with_cv
 from visuals import plot_residuals_and_calculate_rse
 from sklearn.tree import DecisionTreeRegressor
 from linear_reg import train_with_regularization
+from linear_reg import regression_statsmodels
 
 
 # Read in the Data set and create a data frame - df
 df = pd.read_csv('churn_clean.csv')
 dependent_variable = 'Bandwidth_GB_Year'
 # Clean the data
-x_reference, x_analysis, y, one_hot_columns, binary_columns, categorical_columns, continuous_columns = clean_data(df)
+x_reference, x_analysis, y, one_hot_columns, binary_columns, categorical_columns, continuous_columns_list, \
+    df_analysis = clean_data(df)
+# print(list(x_analysis.columns))
+# x_analysis.to_csv('debug.csv')
+# print(x_analysis.dtypes)
+# print(y.dtype)
 
 # Get summary statistics
-summary_statistics(df, one_hot_columns, binary_columns, x_analysis)
+summary_statistics(df, one_hot_columns, binary_columns, df_analysis)
 # churn_stats(df, 'Churn')  # Logistical regression dependent
 bandwidth_stats = df['Bandwidth_GB_Year']
 
 # Plot uni-variate for categorical and continuous
-density_plot(df, continuous_columns)
+density_plot(df, continuous_columns_list)
 count_plot(df, categorical_columns)
 
 # Plot bi-variate for categorical and continuous against the dependant variable
 
 # heat_map(df, categorical_columns, y)
 violin_plot(df, categorical_columns, dependent_variable)
-scatter_plot(df, dependent_variable, continuous_columns)
+scatter_plot(df, dependent_variable, continuous_columns_list)
 
 # linear regression on all independent variables
-regression(x_analysis, y)
+# regression(x_analysis, y)
+regression_statsmodels(x_analysis, y)
 estimator = DecisionTreeRegressor(random_state=42)
 
 # ridge_model = train_with_regularization(x_analysis, y, alpha=1.0)
@@ -48,7 +55,7 @@ estimator = DecisionTreeRegressor(random_state=42)
 x_selected, selected_features, fitted_estimator = feature_selection_with_cv(x_analysis, y, estimator)
 
 # linear regression on selected features identified from feature selection
-y_test, y_pred, linreg_model = regression(x_selected, bandwidth_stats)
+y_test, y_pred, linreg_model = regression_statsmodels(x_selected, bandwidth_stats)
 
 # Call the function to plot residuals and calculate RSE (assuming it's defined elsewhere)
 rse = plot_residuals_and_calculate_rse(y_test, y_pred)
@@ -57,5 +64,5 @@ rse = plot_residuals_and_calculate_rse(y_test, y_pred)
 # dump(dt_model, 'decision_tree_model.joblib')
 
 # Retrieve 'dropped columns' and concatenate to df that was used for analysis and save to new CSV
-result_df = pd.concat([x_reference, x_analysis], axis=1)
-df.to_csv('churn_prepared.csv')
+# result_df = pd.concat([x_reference, x_analysis], axis=1)
+x_analysis.to_csv('churn_prepared.csv')
