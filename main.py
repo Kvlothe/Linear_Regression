@@ -14,6 +14,8 @@ from visuals import plot_residuals_and_calculate_rse
 from sklearn.tree import DecisionTreeRegressor
 from linear_reg import train_with_regularization
 from linear_reg import regression_statsmodels
+from linear_reg import stepwise_selection
+from linear_reg import remove_multicollinear_vars
 
 
 # Read in the Data set and create a data frame - df
@@ -37,22 +39,33 @@ density_plot(df, continuous_columns_list)
 count_plot(df, categorical_columns)
 
 # Plot bi-variate for categorical and continuous against the dependant variable
-
 # heat_map(df, categorical_columns, y)
 violin_plot(df, categorical_columns, dependent_variable)
 scatter_plot(df, dependent_variable, continuous_columns_list)
+
+# check for multicollinearity
+# vif_data = pd.DataFrame()
+# vif_data["feature"] = x_analysis.columns
+#
+# # Calculating VIF for each feature
+# vif_data["VIF"] = [variance_inflation_factor(x_analysis.values, i) for i in range(len(x_analysis.columns))]
+
+# print(vif_data)
 
 # linear regression on all independent variables
 # regression(x_analysis, y)
 regression_statsmodels(x_analysis, y)
 estimator = DecisionTreeRegressor(random_state=42)
+x_reduced = remove_multicollinear_vars(x_analysis)
 
 # ridge_model = train_with_regularization(x_analysis, y, alpha=1.0)
 
 
 # feature selection
 # x_selected, selected_features, dt_model = feature_selection(x_analysis, y)
-x_selected, selected_features, fitted_estimator = feature_selection_with_cv(x_analysis, y, estimator)
+# x_selected, selected_features, fitted_estimator = feature_selection_with_cv(x_analysis, y, estimator)
+x_selected = stepwise_selection(x_reduced, y)
+x_selected = x_analysis[x_selected]
 
 # linear regression on selected features identified from feature selection
 y_test, y_pred, linreg_model = regression_statsmodels(x_selected, bandwidth_stats)
@@ -65,4 +78,4 @@ rse = plot_residuals_and_calculate_rse(y_test, y_pred)
 
 # Retrieve 'dropped columns' and concatenate to df that was used for analysis and save to new CSV
 # result_df = pd.concat([x_reference, x_analysis], axis=1)
-x_analysis.to_csv('churn_prepared.csv')
+# x_analysis.to_csv('churn_prepared.csv')

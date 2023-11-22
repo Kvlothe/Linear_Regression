@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
@@ -9,6 +10,7 @@ from sklearn.base import clone
 from scipy.stats import f
 from scipy import stats
 import statsmodels.api as sm
+from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 # Ignore FutureWarnings - very annoying when trying to view printouts. Had to adjust code here so those warning go away
 # One suggestion was update Seaborn, Already using most current version.**
@@ -96,6 +98,62 @@ def regression_statsmodels(x, y):
     print(f'R-squared: {r2}')
 
     return y_test, y_pred, model
+
+
+def stepwise_selection(x, y, initial_list=[], threshold_in=0.01, threshold_out=0.05, verbose=True):
+    included = list(initial_list)
+    while True:
+        changed = False
+        # Forward step
+        excluded = list(set(x.columns) - set(included))
+        new_pval = pd.Series(index=excluded)
+        for new_column in excluded:
+            model = sm.OLS(y, sm.add_constant(pd.DataFrame(x[included + [new_column]]))).fit()
+            new_pval[new_column] = model.pvalues[new_column]
+        best_pval = new_pval.min()
+        if best_pval < threshold_in:
+            best_feature = new_pval.idxmin()
+            included.append(best_feature)
+            changed=True
+            if verbose:
+                print('Add  {:30} with p-value {:.6}'.format(best_feature, best_pval))
+
+        # Backward step
+        model = sm.OLS(y, sm.add_constant(pd.DataFrame(x[included]))).fit()
+        # use all coefs except intercept
+        pvalues = model.pvalues.iloc[1:]
+        worst_pval = pvalues.max()  # null if pvalues is empty
+        if worst_pval > threshold_out:
+            changed=True
+            worst_feature = pvalues.idxmax()
+            included.remove(worst_feature)
+            if verbose:
+                print('Drop {:30} with p-value {:.6}'.format(worst_feature, worst_pval))
+        if not changed:
+            break
+
+    return included
+
+
+def remove_multicollinear_vars(x, threshold=10):
+    high_vif = True
+    while high_vif:
+        # Calculate VIFs
+        vif_data = pd.DataFrame()
+        vif_data["feature"] = x.columns
+        vif_data["VIF"] = [variance_inflation_factor(x.values, i) for i in range(x.shape[1])]
+
+        # Check for variables with high VIF
+        high_vif_vars = vif_data[vif_data['VIF'] > threshold]
+        if high_vif_vars.empty:
+            high_vif = False
+        else:
+            # Remove the variable with the highest VIF
+            highest_vif_var = high_vif_vars.sort_values('VIF', ascending=False).iloc[0]
+            x = x.drop(highest_vif_var['feature'], axis=1)
+            print(f"Removed {highest_vif_var['feature']} with VIF: {highest_vif_var['VIF']}")
+
+    return x
 
 
 def feature_selection(x, y):

@@ -66,9 +66,16 @@ def clean_data(df):
     # Creating DataFrame
     outliers_info = pd.DataFrame(outliers_info_list)
 
-    # print(outliers_info)
+    print(outliers_info)
     # Call the function
     plot_outliers(df)
+
+    # Attempt to cap outliers - did not improve model, new approach needed
+    # Outliers - Identifying columns to cap
+    # outlier_columns = [col for col in numeric_cols.columns if col in outliers_info['Column'].values]
+    #
+    # for col in outlier_columns:
+    #     df[col] = cap_outliers(df[col])
 
     # Create two separate data frames, one with the dependant variable > y  and
     # one with all the independent variables > x - one that I will manipulate for analysis
@@ -91,12 +98,21 @@ def clean_data(df):
 
     for col in binary_columns:
         x_analysis[col] = x_analysis[col].map(binary_mapping)
-
     categorical_columns = one_hot_columns + binary_columns
     continuous_columns_list = x_analysis.drop(columns=categorical_columns).columns.tolist()
     x_analysis = pd.get_dummies(x_analysis, columns=one_hot_columns, drop_first=True)
+    # After one-hot encoding, ensure all values are binary (1/0)
+    x_analysis = x_analysis.applymap(lambda x: 1 if x == True else (0 if x == False else x))
     df_analysis = df.drop(columns=columns_to_keep)
     print()
+    x_analysis.to_csv('churn_prepared.csv')
 
     return x_reference, x_analysis, y, one_hot_columns, binary_columns, categorical_columns, continuous_columns_list, \
         df_analysis
+
+
+# Attempt to cap outliers - did not improve model, new approach needed
+def cap_outliers(series, lower_percentile=5, upper_percentile=95):
+    lower_limit = series.quantile(lower_percentile / 100)
+    upper_limit = series.quantile(upper_percentile / 100)
+    return series.clip(lower=lower_limit, upper=upper_limit)
